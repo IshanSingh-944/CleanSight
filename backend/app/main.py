@@ -27,6 +27,17 @@ app.include_router(planning.router, prefix="/api")
 app.include_router(execution.router, prefix="/api")
 app.include_router(chat.router, prefix="/api")
 
+@app.get("/")
+async def root():
+    return {
+        "service": "CleanSight AI Backend API",
+        "version": "3.1.0",
+        "status": "online",
+        "docs_url": "/docs",
+        "health_check": "/health",
+        "readiness_check": "/ready"
+    }
+
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "service": "CleanSight AI Backend"}
@@ -43,4 +54,3 @@ async def readiness_check():
     except Exception as e:
         logger.error("Readiness check failed: %s", str(e))
         return {"status": "not_ready", "error": "Database connection failed"}, 503
-
