@@ -9,17 +9,3 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
-
-  - type: static
-    name: cleansight-ai-frontend
-    region: ohio
-    plan: free
-    buildCommand: npm install && npm run build
-    staticPublishPath: dist
-    envVars:
-      - key: VITE_API_BASE_URL
-        value: https://cleansight-ai-backend.onrender.com
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
