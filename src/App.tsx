@@ -4,10 +4,12 @@ import { FileDropzone } from './components/FileDropzone';
 import { SelectedFileRow } from './components/SelectedFileRow';
 import { ReviewWorkspace } from './components/ReviewWorkspace';
 import { AIChatSidebar } from './components/AIChatSidebar';
+import { LandingPage } from './components/LandingPage';
 import { API_BASE_URL } from './config';
 import type { DatasetFile, DatasetProfile, Recommendation } from './types';
 
 export function App() {
+  const [currentView, setCurrentView] = useState<'landing' | 'workspace'>('landing');
   const [selectedFile, setSelectedFile] = useState<DatasetFile | null>(null);
   const [isProfiling, setIsProfiling] = useState<boolean>(false);
   const [profile, setProfile] = useState<DatasetProfile | null>(null);
@@ -120,31 +122,35 @@ export function App() {
     setErrorMessage(null);
   };
 
+  if (currentView === 'landing') {
+    return <LandingPage onOpenWorkspace={() => setCurrentView('workspace')} />;
+  }
+
   return (
-    <div className="min-h-screen bg-[#f7f6f3] text-[#1c1c1a] font-sans selection:bg-stone-200">
-      <WorkspaceHeader />
+    <div className="min-h-screen bg-[#F7F7F4] text-[#252A2E] font-sans selection:bg-[#E1E5E3]">
+      <WorkspaceHeader onBackToLanding={() => setCurrentView('landing')} />
       
-      <main className="max-w-4xl mx-auto py-8 px-6">
+      <main className="max-w-5xl mx-auto py-8 px-6">
         {!profile ? (
-          <div className="space-y-8">
+          <div className="space-y-8 max-w-3xl mx-auto py-4">
             <div className="space-y-2">
-              <div className="text-xs text-stone-500 font-mono">
+              <div className="text-xs text-[#2868A6] font-mono font-medium">
                 Step 1 of 3 / Ingestion & Profiling
               </div>
-              <h1 className="text-2xl font-bold tracking-tight text-[#1c1c1a] m-0">
-                Upload a dataset
+              <h1 className="text-2xl font-bold tracking-tight text-[#252A2E] m-0">
+                Upload a dataset for analysis
               </h1>
-              <p className="text-xs text-stone-600">
-                Select a file to review it before analysis or cleaning.
+              <p className="text-xs text-[#69747D]">
+                Select a CSV, Excel, or JSON file to run deterministic profiling and quality checks before cleaning.
               </p>
             </div>
 
             {isProfiling ? (
-              <div className="bg-white border border-[#e6e5e0] rounded-lg p-12 text-center space-y-4">
-                <div className="w-8 h-8 rounded-full border-2 border-stone-800 border-t-transparent animate-spin mx-auto"></div>
+              <div className="bg-white border border-[#E1E5E3] rounded-lg p-12 text-center space-y-4 shadow-xs">
+                <div className="w-8 h-8 rounded-full border-2 border-[#252A2E] border-t-transparent animate-spin mx-auto"></div>
                 <div className="space-y-1">
-                  <h3 className="text-sm font-semibold text-[#1c1c1a]">Profiling dataset...</h3>
-                  <p className="text-xs text-stone-500">Running deterministic checks and analyzing data quality.</p>
+                  <h3 className="text-sm font-semibold text-[#252A2E]">Profiling dataset...</h3>
+                  <p className="text-xs text-[#69747D]">Running deterministic checks and analyzing data quality.</p>
                 </div>
               </div>
             ) : (
@@ -160,7 +166,7 @@ export function App() {
                 )}
 
                 {errorMessage && (
-                  <div className="p-4 bg-red-50 border border-red-200 rounded text-red-700 text-xs">
+                  <div className="p-4 bg-rose-50 border border-rose-200 rounded text-rose-800 text-xs shadow-xs">
                     {errorMessage}
                   </div>
                 )}
@@ -180,7 +186,6 @@ export function App() {
             <AIChatSidebar
               datasetId={datasetId}
               profile={profile}
-              recommendations={recommendations}
             />
           </>
         )}
