@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: cleansight-ai-backend
+    env: python
+    region: ohio
+    plan: free
+    buildCommand: pip install --upgrade pip && pip install -r backend/requirements.txt
+    startCommand: python3 -m uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
