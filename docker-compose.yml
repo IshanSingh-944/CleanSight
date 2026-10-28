@@ -1,0 +1,9 @@
+services:
+  cleansight-app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - LOG_LEVEL=INFO
