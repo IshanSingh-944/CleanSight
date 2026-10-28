@@ -14,7 +14,6 @@ if os.path.exists(".env"):
                 if k.strip() not in os.environ:
                     os.environ[k.strip()] = v.strip().strip("'").strip('"')
 
-# Static variant pools for greetings, acknowledgments, and thanks
 GREETING_VARIANTS = [
     "Hey! What would you like to investigate in your dataset?",
     "Hey there! Need help understanding a column or cleaning recommendation?",
@@ -48,7 +47,6 @@ class AIChatAssistant:
     def classify_intent(user_message: str) -> str:
         msg = user_message.strip().lower()
         
-        # Greetings & conversational
         greetings = ["hi", "hello", "hey", "hey there", "yo", "sup", "yo sup", "good morning", "good afternoon", "good evening"]
         if msg in greetings:
             return "GREETING"
@@ -59,7 +57,6 @@ class AIChatAssistant:
         if any(w in msg for w in ["okay", "cool", "got it", "nice", "sounds good"]) and len(msg.split()) <= 4:
             return "ACKNOWLEDGMENT"
             
-        # Off-topic checks (sports, jokes, coding games, weather, etc.)
         off_topic_keywords = ["joke", "weather", "cricket", "match", "python game", "movie", "president", "recipe", "song", "capital of"]
         if any(k in msg for k in off_topic_keywords) and not any(k in msg for k in ["dataset", "column", "missing", "duplicate", "clean", "recommendation", "risk"]):
             return "OFF_TOPIC"
@@ -76,7 +73,6 @@ class AIChatAssistant:
     ) -> str:
         intent = AIChatAssistant.classify_intent(user_message)
         
-        # Handle deterministic static intents
         if intent == "OFF_TOPIC":
             return OFF_TOPIC_REFUSAL
         if intent == "GREETING":
@@ -88,7 +84,6 @@ class AIChatAssistant:
         if intent == "ACKNOWLEDGMENT":
             return random.choice(ACKNOWLEDGMENT_VARIANTS)
             
-        # For all dataset and analytical queries, prioritize OpenRouter / OpenAI LLM
         api_key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("OPENAI_API_KEY")
         
         system_instruction = f"""
@@ -130,16 +125,20 @@ class AIChatAssistant:
                     data=json.dumps(req_data).encode("utf-8"),
                     headers={
                         "Authorization": f"Bearer {api_key}",
-                        "Content-Type": "application/json"
+                        "Content-Type": "application/json",
+                        "HTTP-Referer": "https://cleansight.ai",
+                        "X-Title": "CleanSight AI"
                     },
                     method="POST"
                 )
-                with urllib.request.urlopen(req, timeout=15) as resp:
+                with urllib.request.urlopen(req, timeout=20) as resp:
                     res_body = json.loads(resp.read().decode("utf-8"))
                     answer = res_body["choices"][0]["message"]["content"]
                     if answer:
                         return answer
             except Exception as e:
+                # Log the actual exception for debugging on Render logs
+                print(f"OpenRouter API Error: {str(e)}")
                 pass
                 
         # Grounded intelligent fallback responder if API key is missing or offline
