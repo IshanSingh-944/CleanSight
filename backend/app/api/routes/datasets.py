@@ -1,6 +1,7 @@
 import os
 import uuid
 import json
+import pandas as pd
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from ...services.file_loader import FileLoader
 from ...services.profiler import Profiler
@@ -29,15 +30,24 @@ def load_dataset_from_db_if_needed(dataset_id: str):
         
     original_path = row["original_path"]
     if not os.path.exists(original_path):
-        return None
+        # Fallback search in STORAGE_DIR if relative/absolute path mismatch occurred
+        base_name = os.path.basename(original_path)
+        alt_path = os.path.join(STORAGE_DIR, base_name)
+        if os.path.exists(alt_path):
+            original_path = alt_path
+        else:
+            return None
         
-    if original_path.endswith('.csv'):
-        df = pd.read_csv(original_path)
-    elif original_path.endswith('.xlsx') or original_path.endswith('.xls'):
-        df = pd.read_excel(original_path)
-    elif original_path.endswith('.json'):
-        df = pd.read_json(original_path)
-    else:
+    try:
+        if original_path.endswith('.csv'):
+            df = pd.read_csv(original_path)
+        elif original_path.endswith('.xlsx') or original_path.endswith('.xls'):
+            df = pd.read_excel(original_path)
+        elif original_path.endswith('.json'):
+            df = pd.read_json(original_path)
+        else:
+            return None
+    except Exception:
         return None
         
     DATASET_STORE[dataset_id] = df
@@ -58,7 +68,6 @@ async def upload_dataset(file: UploadFile = File(...)):
     
     dataset_id = f"ds_{uuid.uuid4().hex[:10]}"
     
-    # Store original file securely on disk with its original filename (sanitized)
     os.makedirs(STORAGE_DIR, exist_ok=True)
     safe_base_name = "".join(c for c in file.filename.rsplit('.', 1)[0] if c.isalnum() or c in (' ', '_', '-')).strip().replace(' ', '_')
     original_filename = f"{safe_base_name}_{dataset_id}.{extension}"
@@ -86,7 +95,6 @@ async def upload_dataset(file: UploadFile = File(...)):
     PROFILE_STORE[dataset_id] = profile_data
     RECOMMENDATION_STORE[dataset_id] = recommendations
     
-    # Persist to SQLite
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -101,7 +109,7 @@ async def upload_dataset(file: UploadFile = File(...)):
         ))
         conn.commit()
         conn.close()
-    except Exception as e:
+    except Exception:
         pass
     
     return profile_data
