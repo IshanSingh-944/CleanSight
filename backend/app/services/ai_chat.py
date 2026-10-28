@@ -107,8 +107,14 @@ class AIChatAssistant:
         if intent == "ACKNOWLEDGMENT":
             return random.choice(ACKNOWLEDGMENT_VARIANTS)
 
-        api_key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("OPENAI_API_KEY")
-        print(f"DEBUG CHAT: api_key present={bool(api_key)} len={len(api_key) if api_key else 0}")
+        # Check all possible environment variable variants
+        api_key = (
+            os.environ.get("OPENROUTER_API_KEY") or 
+            os.environ.get("OPENAI_API_KEY") or
+            os.getenv("OPENROUTER_API_KEY") or
+            os.getenv("OPENAI_API_KEY")
+        )
+        print(f"DEBUG CHAT: api_key present={bool(api_key)} len={len(api_key) if api_key else 0} keys_in_env={[k for k in os.environ if 'API' in k or 'KEY' in k]}")
 
         system_instruction = f"""You are CleanSight AI Enquire, an expert data-quality and cleaning assistant.
 Answer questions about the currently loaded dataset, profiling results, recommendations, risk levels, and execution outcomes.
