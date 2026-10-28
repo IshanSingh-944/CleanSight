@@ -1,11 +1,12 @@
 services:
   - type: web
-    name: cleansight-ai-backend
-    env: python
+    name: cleansight-ai-app
+    env: docker
     region: ohio
     plan: free
-    buildCommand: pip install --upgrade pip && pip install -r backend/requirements.txt
-    startCommand: python3 -m uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    dockerfile: Dockerfile
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.11.0
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: LOG_LEVEL
+        value: INFO
