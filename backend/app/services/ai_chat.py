@@ -85,6 +85,7 @@ class AIChatAssistant:
             return random.choice(ACKNOWLEDGMENT_VARIANTS)
             
         api_key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("OPENAI_API_KEY")
+        print(f"DEBUG: OPENROUTER_API_KEY present: {bool(api_key)} (len: {len(api_key) if api_key else 0})")
         
         system_instruction = f"""
         You are CleanSight AI Enquire, an expert data-quality and cleaning assistant powered by OpenRouter / OpenAI models.
@@ -131,15 +132,17 @@ class AIChatAssistant:
                     },
                     method="POST"
                 )
-                with urllib.request.urlopen(req, timeout=20) as resp:
+                with urllib.request.urlopen(req, timeout=25) as resp:
                     res_body = json.loads(resp.read().decode("utf-8"))
                     answer = res_body["choices"][0]["message"]["content"]
                     if answer:
+                        print(f"DEBUG: OpenRouter SUCCESS. Answer length: {len(answer)}")
                         return answer
             except Exception as e:
-                # Log the actual exception for debugging on Render logs
-                print(f"OpenRouter API Error: {str(e)}")
+                print(f"DEBUG: OpenRouter API Error Exception: {str(e)}")
                 pass
+        else:
+            print("DEBUG: API Key is missing or empty!")
                 
         # Grounded intelligent fallback responder if API key is missing or offline
         msg_lower = user_message.lower()
