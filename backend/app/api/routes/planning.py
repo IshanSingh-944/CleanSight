@@ -1,14 +1,16 @@
 from fastapi import APIRouter, HTTPException
 from ...schemas.plan import PlanRequest, PlanResponse
 from ...services.llm_planner import LLMPlanner
-from .datasets import PROFILE_STORE, RECOMMENDATION_STORE
+from .datasets import PROFILE_STORE, RECOMMENDATION_STORE, load_dataset_from_db_if_needed
 
 router = APIRouter(prefix="/datasets", tags=["planning"])
 
 @router.post("/{dataset_id}/plan", response_model=PlanResponse)
 async def generate_dataset_plan(dataset_id: str, body: PlanRequest):
     if dataset_id not in PROFILE_STORE:
-        raise HTTPException(status_code=404, detail="Dataset profile not found.")
+        load_dataset_from_db_if_needed(dataset_id)
+        if dataset_id not in PROFILE_STORE:
+            raise HTTPException(status_code=404, detail="Dataset profile not found.")
         
     profile = PROFILE_STORE[dataset_id]
     existing_recs = RECOMMENDATION_STORE.get(dataset_id, [])

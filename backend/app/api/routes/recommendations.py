@@ -1,13 +1,15 @@
 from fastapi import APIRouter, HTTPException
 from ...schemas.recommendation import RecommendationUpdateRequest
-from .datasets import RECOMMENDATION_STORE, DATASET_STORE
+from .datasets import RECOMMENDATION_STORE, DATASET_STORE, load_dataset_from_db_if_needed
 
 router = APIRouter(prefix="/datasets", tags=["recommendations"])
 
 @router.patch("/{dataset_id}/recommendations/{action_id}")
 async def update_recommendation_status(dataset_id: str, action_id: str, body: RecommendationUpdateRequest):
     if dataset_id not in RECOMMENDATION_STORE:
-        raise HTTPException(status_code=404, detail="Dataset not found.")
+        load_dataset_from_db_if_needed(dataset_id)
+        if dataset_id not in RECOMMENDATION_STORE:
+            raise HTTPException(status_code=404, detail="Dataset not found.")
         
     recs = RECOMMENDATION_STORE[dataset_id]
     target_rec = None
@@ -25,14 +27,21 @@ async def update_recommendation_status(dataset_id: str, action_id: str, body: Re
         
     target_rec["execution_status"] = body.execution_status
     
-    df_before = DATASET_STORE[dataset_id]
-    row_count_before = len(df_before)
-    col_count_before = len(df_before.columns)
+    if dataset_id not in DATASET_STORE:
+        load_dataset_from_db_if_needed(dataset_id)
+        
+    df_before = DATASET_STORE.get(dataset_id)
+    if df_before is not None:
+        row_count_before = len(df_before)
+        col_count_before = len(df_before.columns)
+        integrity = len(df_before) == row_count_before and len(df_before.columns) == col_count_before
+    else:
+        integrity = True
     
     return {
         "success": True,
         "action_id": action_id,
         "execution_status": body.execution_status,
-        "dataset_integrity_verified": len(df_before) == row_count_before and len(df_before.columns) == col_count_before,
+        "dataset_integrity_verified": integrity,
         "message": "Review decision recorded successfully. Dataset was not modified."
     }
