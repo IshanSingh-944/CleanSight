@@ -85,7 +85,7 @@ class AIChatAssistant:
             return random.choice(ACKNOWLEDGMENT_VARIANTS)
             
         api_key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("OPENAI_API_KEY")
-        print(f"DEBUG: OPENROUTER_API_KEY present: {bool(api_key)} (len: {len(api_key) if api_key else 0})")
+        print(f"DEBUG CHAT: API_KEY present: {bool(api_key)}, len: {len(api_key) if api_key else 0}")
         
         system_instruction = f"""
         You are CleanSight AI Enquire, an expert data-quality and cleaning assistant powered by OpenRouter / OpenAI models.
@@ -136,32 +136,36 @@ class AIChatAssistant:
                     res_body = json.loads(resp.read().decode("utf-8"))
                     answer = res_body["choices"][0]["message"]["content"]
                     if answer:
-                        print(f"DEBUG: OpenRouter SUCCESS. Answer length: {len(answer)}")
+                        print(f"DEBUG CHAT: OpenRouter SUCCESS! Answer length: {len(answer)}")
                         return answer
+            except urllib.error.HTTPError as he:
+                err_body = he.read().decode("utf-8") if he.fp else ""
+                print(f"DEBUG CHAT: OpenRouter HTTPError {he.code}: {he.reason} - Body: {err_body}")
+                return f"[LLM Error {he.code}]: Unable to reach AI provider. Check Render environment variables or API quota."
             except Exception as e:
-                print(f"DEBUG: OpenRouter API Error Exception: {str(e)}")
-                pass
+                print(f"DEBUG CHAT: OpenRouter Exception: {str(e)}")
+                return f"[LLM Error]: {str(e)}"
         else:
-            print("DEBUG: API Key is missing or empty!")
+            print("DEBUG CHAT: API Key is missing or empty on Render!")
                 
         # Grounded intelligent fallback responder if API key is missing or offline
         msg_lower = user_message.lower()
         if "missing" in msg_lower:
             total_missing = profile.get('total_missing_cells', 0)
             missing_cols = [f"'{c['name']}' ({c['missing_count']} missing, {c['missing_percentage']:.1f}%)" for c in profile.get('columns', []) if c['missing_count'] > 0]
-            return f"The dataset contains {total_missing} total missing cells. Affected columns include:\n" + "\n".join([f"- {col}" for col in missing_cols]) + "\n\nApplying imputation recommendations will fill these values using median or mode strategies."
+            return f"[Offline Fallback] The dataset contains {total_missing} total missing cells. Affected columns include:\n" + "\n".join([f"- {col}" for col in missing_cols]) + "\n\nApplying imputation recommendations will fill these values using median or mode strategies."
         elif "risk" in msg_lower:
             risk_summary = profile.get('risk_summary', {'Low': 0, 'Medium': 0, 'High': 0})
             high_med_recs = [r for r in recommendations if r['risk_level'] in ['Medium', 'High']]
             details = "\n".join([f"- **{r['title']}** ({r['risk_level']} Risk): {r['rationale']}" for r in high_med_recs])
-            return f"Risk breakdown: Low ({risk_summary.get('Low', 0)}), Medium ({risk_summary.get('Medium', 0)}), High ({risk_summary.get('High', 0)}).\n\nKey recommendations with risk:\n{details if details else 'None'}"
+            return f"[Offline Fallback] Risk breakdown: Low ({risk_summary.get('Low', 0)}), Medium ({risk_summary.get('Medium', 0)}), High ({risk_summary.get('High', 0)}).\n\nKey recommendations with risk:\n{details if details else 'None'}"
         elif "duplicate" in msg_lower:
             dup_cnt = profile.get('duplicate_row_count', 0)
-            return f"The dataset has {dup_cnt} exact duplicate rows. Removing duplicates eliminates redundant records that could skew statistical summaries."
+            return f"[Offline Fallback] The dataset has {dup_cnt} exact duplicate rows. Removing duplicates eliminates redundant records that could skew statistical summaries."
         elif "issue" in msg_lower or "problem" in msg_lower or "biggest" in msg_lower:
             recs_count = len(recommendations)
             top_recs = recommendations[:4]
             details = "\n".join([f"- **{r['title']}** (Impact: {r.get('affected_percentage', 0):.1f}%, Risk: {r['risk_level']})" for r in top_recs])
-            return f"The profiler detected {recs_count} key quality issues in '{profile.get('filename')}':\n{details}\n\nApprove desired actions and click 'Apply Approved Changes' to execute cleaning."
+            return f"[Offline Fallback] The profiler detected {recs_count} key quality issues in '{profile.get('filename')}':\n{details}\n\nApprove desired actions and click 'Apply Approved Changes' to execute cleaning."
         else:
-            return f"Dataset '{profile.get('filename')}' has {profile.get('row_count')} rows and {profile.get('column_count')} columns with {profile.get('total_missing_cells')} missing cells. How can I assist with your cleaning plan?"
+            return f"[Offline Fallback] Dataset '{profile.get('filename')}' has {profile.get('row_count')} rows and {profile.get('column_count')} columns with {profile.get('total_missing_cells')} missing cells. How can I assist with your cleaning plan?"
