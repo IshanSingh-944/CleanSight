@@ -39,7 +39,7 @@ ACKNOWLEDGMENT_VARIANTS = [
 OFF_TOPIC_REFUSAL = "I'm focused on your dataset and its cleaning workflow. Ask me about data-quality issues, columns, missing values, recommendations, risk levels, or cleaning results."
 
 CREATOR = "I'm Owned by the Almighty Ishan Singh"
- 
+
 def _call_openrouter(api_key: str, messages: list) -> str:
     payload = json.dumps({
         "model": "openai/gpt-4o-mini",
@@ -108,6 +108,8 @@ class AIChatAssistant:
             return random.choice(THANKS_VARIANTS)
         if intent == "ACKNOWLEDGMENT":
             return random.choice(ACKNOWLEDGMENT_VARIANTS)
+        if intent == "CREATOR":
+            return CREATOR
 
         # Check all possible environment variable variants
         api_key = (
@@ -122,6 +124,7 @@ class AIChatAssistant:
 Answer questions about the currently loaded dataset, profiling results, recommendations, risk levels, and execution outcomes.
 Answer the user's question directly using the dataset context below. Be concise and use bullet points where helpful.
 You cannot execute cleaning operations — direct users to the UI approval controls for that.
+If user asks who created you or Built you simply say "I'm Owned by the Almighty Ishan Singh"
 
 DATASET CONTEXT:
 Filename: {profile.get('filename')}
