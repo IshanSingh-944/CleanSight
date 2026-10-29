@@ -4,6 +4,7 @@ pandas
 numpy
 pydantic
 openpyxl
+xlrd
 pytest
 python-multipart
 python-dotenv

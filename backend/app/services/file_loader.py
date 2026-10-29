@@ -34,8 +34,14 @@ class FileLoader:
                     df = pd.read_csv(io.BytesIO(contents))
                 except Exception:
                     df = pd.read_csv(io.BytesIO(contents), encoding='latin1')
-            elif extension in ['xls', 'xlsx']:
-                df = pd.read_excel(io.BytesIO(contents))
+            elif extension == 'xlsx':
+                df = pd.read_excel(io.BytesIO(contents), engine='openpyxl')
+            elif extension == 'xls':
+                try:
+                    df = pd.read_excel(io.BytesIO(contents), engine='xlrd')
+                except Exception:
+                    # In case the file is an xlsx mistakenly named .xls
+                    df = pd.read_excel(io.BytesIO(contents), engine='openpyxl')
             elif extension == 'json':
                 df = pd.read_json(io.BytesIO(contents))
             else:
@@ -54,4 +60,4 @@ class FileLoader:
         except HTTPException as he:
             raise he
         except Exception as e:
-            raise HTTPException(status_code=400, detail="Failed to parse file securely. Ensure valid tabular formatting.")
+            raise HTTPException(status_code=400, detail=f"Failed to parse file: {str(e)}")
