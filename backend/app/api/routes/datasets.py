@@ -2,12 +2,13 @@ import os
 import uuid
 import json
 import pandas as pd
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from ...services.file_loader import FileLoader
 from ...services.profiler import Profiler
 from ...services.issue_detector import IssueDetector
 from ...services.recommendation_engine import RecommendationEngine
 from ...services.db import get_db_connection, STORAGE_DIR
+from .auth import get_optional_current_user, get_current_user
 
 router = APIRouter(prefix="/datasets", tags=["datasets"])
 
@@ -30,7 +31,6 @@ def load_dataset_from_db_if_needed(dataset_id: str):
         
     original_path = row["original_path"]
     if not os.path.exists(original_path):
-        # Fallback search in STORAGE_DIR if relative/absolute path mismatch occurred
         base_name = os.path.basename(original_path)
         alt_path = os.path.join(STORAGE_DIR, base_name)
         if os.path.exists(alt_path):
@@ -56,7 +56,10 @@ def load_dataset_from_db_if_needed(dataset_id: str):
     return df
 
 @router.post("")
-async def upload_dataset(file: UploadFile = File(...)):
+async def upload_dataset(
+    file: UploadFile = File(...),
+    current_user: Optional[dict] = Depends(get_optional_current_user)
+):
     if not file.filename:
         raise HTTPException(status_code=400, detail="No filename provided.")
         
@@ -67,6 +70,7 @@ async def upload_dataset(file: UploadFile = File(...)):
     df = FileLoader.load_file(contents, file.filename)
     
     dataset_id = f"ds_{uuid.uuid4().hex[:10]}"
+    user_id = current_user.get("user_id") if current_user else None
     
     os.makedirs(STORAGE_DIR, exist_ok=True)
     safe_base_name = "".join(c for c in file.filename.rsplit('.', 1)[0] if c.isalnum() or c in (' ', '_', '-')).strip().replace(' ', '_')
@@ -100,11 +104,11 @@ async def upload_dataset(file: UploadFile = File(...)):
         cursor = conn.cursor()
         cursor.execute('''
             INSERT OR REPLACE INTO datasets (
-                dataset_id, filename, file_size, extension, row_count, column_count,
+                dataset_id, user_id, filename, file_size, extension, row_count, column_count,
                 original_path, profile_json, recommendations_json, status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
-            dataset_id, file.filename, file_size, extension, len(df), len(df.columns),
+            dataset_id, user_id, file.filename, file_size, extension, len(df), len(df.columns),
             original_path, json.dumps(profile_data), json.dumps(recommendations), "active"
         ))
         conn.commit()
@@ -113,6 +117,19 @@ async def upload_dataset(file: UploadFile = File(...)):
         pass
     
     return profile_data
+
+@router.get("/my-history")
+async def get_user_dataset_history(current_user: dict = Depends(get_current_user)):
+    user_id = current_user["user_id"]
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT dataset_id, filename, file_size, extension, row_count, column_count, status, created_at
+        FROM datasets WHERE user_id = ? ORDER BY created_at DESC
+    ''', (user_id,))
+    rows = cursor.fetchall()
+    conn.close()
+    return {"datasets": [dict(r) for r in rows]}
 
 @router.get("/{dataset_id}/profile")
 async def get_dataset_profile(dataset_id: str):

@@ -20,9 +20,23 @@ def get_db_connection():
 def init_db():
     conn = get_db_connection()
     cursor = conn.cursor()
+    
+    # Users table for authenticated accounts
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            user_id TEXT PRIMARY KEY,
+            email TEXT UNIQUE NOT NULL,
+            hashed_password TEXT NOT NULL,
+            full_name TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # Datasets table supporting guest (user_id IS NULL) and user-owned persistence
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS datasets (
             dataset_id TEXT PRIMARY KEY,
+            user_id TEXT,
             filename TEXT NOT NULL,
             file_size INTEGER NOT NULL,
             extension TEXT NOT NULL,
@@ -34,11 +48,27 @@ def init_db():
             recommendations_json TEXT NOT NULL,
             execution_result_json TEXT,
             status TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (user_id)
         )
     ''')
+    
+    # Cleaning executions audit log table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS cleaning_executions (
+            execution_id TEXT PRIMARY KEY,
+            dataset_id TEXT NOT NULL,
+            user_id TEXT,
+            audit_log_json TEXT NOT NULL,
+            metrics_json TEXT NOT NULL,
+            cleaned_path TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (dataset_id) REFERENCES datasets (dataset_id)
+        )
+    ''')
+    
     conn.commit()
     conn.close()
-    logger.info("Database initialized successfully at %s", DB_PATH)
+    logger.info("Database initialized successfully with multi-user schema at %s", DB_PATH)
 
 init_db()

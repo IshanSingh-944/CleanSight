@@ -2,10 +2,13 @@ fastapi
 uvicorn
 pandas
 numpy
-pydantic
+pydantic[email]
 openpyxl
 xlrd
 pytest
 python-multipart
 python-dotenv
 httpx
+passlib[bcrypt]
+python-jose
+email-validator
