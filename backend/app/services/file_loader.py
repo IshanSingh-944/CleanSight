@@ -37,11 +37,18 @@ class FileLoader:
             elif extension == 'xlsx':
                 df = pd.read_excel(io.BytesIO(contents), engine='openpyxl')
             elif extension == 'xls':
+                # .xls files can sometimes be binary BIFF (.xls via xlrd) or zipped XML (.xlsx via openpyxl)
                 try:
                     df = pd.read_excel(io.BytesIO(contents), engine='xlrd')
                 except Exception:
-                    # In case the file is an xlsx mistakenly named .xls
-                    df = pd.read_excel(io.BytesIO(contents), engine='openpyxl')
+                    try:
+                        df = pd.read_excel(io.BytesIO(contents), engine='openpyxl')
+                    except Exception:
+                        # Fallback: try parsing as CSV in case it's a tab/comma separated file with .xls extension
+                        try:
+                            df = pd.read_csv(io.BytesIO(contents))
+                        except Exception:
+                            df = pd.read_csv(io.BytesIO(contents), encoding='latin1')
             elif extension == 'json':
                 df = pd.read_json(io.BytesIO(contents))
             else:
