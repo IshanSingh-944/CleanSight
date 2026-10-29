@@ -38,6 +38,8 @@ ACKNOWLEDGMENT_VARIANTS = [
 
 OFF_TOPIC_REFUSAL = "I'm focused on your dataset and its cleaning workflow. Ask me about data-quality issues, columns, missing values, recommendations, risk levels, or cleaning results."
 
+CREATOR = "I'm Owned by the Almighty Ishan Singh"
+ 
 def _call_openrouter(api_key: str, messages: list) -> str:
     payload = json.dumps({
         "model": "openai/gpt-4o-mini",
