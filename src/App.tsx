@@ -5,10 +5,12 @@ import { SelectedFileRow } from './components/SelectedFileRow';
 import { ReviewWorkspace } from './components/ReviewWorkspace';
 import { AIChatSidebar } from './components/AIChatSidebar';
 import { LandingPage } from './components/LandingPage';
+import { AuthPage } from './components/AuthPage';
 import { API_BASE_URL } from './config';
 import type { DatasetFile, DatasetProfile, Recommendation } from './types';
 
 export function App() {
+  const [user, setUser] = useState<{ user_id: string; email: string; full_name?: string | null } | null>(null);
   const [currentView, setCurrentView] = useState<'landing' | 'workspace'>('landing');
   const [selectedFile, setSelectedFile] = useState<DatasetFile | null>(null);
   const [isProfiling, setIsProfiling] = useState<boolean>(false);
@@ -16,6 +18,20 @@ export function App() {
   const [datasetId, setDatasetId] = useState<string>('');
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const handleAuthSuccess = (userData: { user_id: string; email: string; full_name?: string | null }) => {
+    setUser(userData);
+    setCurrentView('landing');
+  };
+
+  const handleSignOut = () => {
+    setUser(null);
+    setCurrentView('landing');
+    setSelectedFile(null);
+    setProfile(null);
+    setRecommendations([]);
+    setErrorMessage(null);
+  };
 
   const handleFileSelect = (file: DatasetFile) => {
     setSelectedFile(file);
@@ -122,13 +138,22 @@ export function App() {
     setErrorMessage(null);
   };
 
+  if (!user) {
+    return (
+      <AuthPage
+        onAuthSuccess={handleAuthSuccess}
+        onBack={() => {}}
+      />
+    );
+  }
+
   if (currentView === 'landing') {
     return <LandingPage onOpenWorkspace={() => setCurrentView('workspace')} />;
   }
 
   return (
     <div className="min-h-screen bg-[#F7F7F4] text-[#252A2E] font-sans selection:bg-[#E1E5E3]">
-      <WorkspaceHeader onBackToLanding={() => setCurrentView('landing')} />
+      <WorkspaceHeader onBackToLanding={() => setCurrentView('landing')} user={user} onSignOut={handleSignOut} />
       
       <main className="max-w-5xl mx-auto py-8 px-6">
         {!profile ? (
