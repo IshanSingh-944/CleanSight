@@ -1,6 +1,7 @@
 import os
 import uuid
 import json
+from typing import Optional
 import pandas as pd
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from ...services.file_loader import FileLoader

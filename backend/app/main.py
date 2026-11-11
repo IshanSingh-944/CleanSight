@@ -53,6 +53,7 @@ async def readiness_check():
 
 # Mount frontend static files if built in container
 frontend_dist = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../frontend_dist"))
+logger.info("Frontend dist path: %s (exists=%s)", frontend_dist, os.path.exists(frontend_dist))
 if os.path.exists(frontend_dist):
     app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dist, "assets")), name="assets")
 
