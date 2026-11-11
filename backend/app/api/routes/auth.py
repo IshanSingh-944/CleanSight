@@ -8,7 +8,7 @@ from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr, Field
 import uuid
 
-from app.services.db import get_db_connection
+from ...services.db import get_db_connection
 
 SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "cleansight_super_secret_jwt_key_2026_secure")
 ALGORITHM = "HS256"

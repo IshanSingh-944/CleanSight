@@ -6,13 +6,17 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from .api.routes import datasets, recommendations, planning, execution, chat, auth
 from .services.middleware import ObservabilityMiddleware
-from .services.db import get_db_connection
+from .services.db import get_db_connection, init_db
 
 log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(level=getattr(logging, log_level, logging.INFO), format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("cleansight")
 
 app = FastAPI(title="CleanSight AI API", version="3.1.0")
+
+@app.on_event("startup")
+def _startup():
+    init_db()
 
 app.add_middleware(ObservabilityMiddleware)
 app.add_middleware(
