@@ -5,9 +5,10 @@ interface WorkspaceHeaderProps {
   onBackToLanding: () => void;
   user: { user_id: string; email: string; full_name?: string | null } | null;
   onSignOut: () => void;
+  isGuest?: boolean;
 }
 
-export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({ onBackToLanding, user, onSignOut }) => {
+export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({ onBackToLanding, user, onSignOut, isGuest }) => {
   return (
     <header className="border-b border-[#E1E5E3] bg-white sticky top-0 z-30">
       <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
@@ -33,24 +34,26 @@ export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({ onBackToLandin
         <div className="flex items-center gap-4 text-xs">
           <div className="hidden sm:flex items-center gap-2 text-[#69747D] font-mono text-[11px] bg-[#F7F7F4] px-2.5 py-1 rounded border border-[#E1E5E3]">
             <Database className="w-3.5 h-3.5 text-[#69747D]" />
-            <span>Deterministic Engine</span>
+            <span>{isGuest ? 'Guest Session' : 'Deterministic Engine'}</span>
           </div>
           <div className="flex items-center gap-1.5 text-emerald-800 font-medium bg-emerald-50 px-2.5 py-1 rounded border border-emerald-200 text-[11px]">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
             <span>Immutable Mode</span>
           </div>
-          <div className="flex items-center gap-3 border-l border-[#E1E5E3] pl-4">
-            <div className="flex items-center gap-2 text-[#69747D]">
-              <span className="font-mono text-[11px]">{user?.email}</span>
+          {user && (
+            <div className="flex items-center gap-3 border-l border-[#E1E5E3] pl-4">
+              <div className="flex items-center gap-2 text-[#69747D]">
+                <span className="font-mono text-[11px]">{user.email}</span>
+              </div>
+              <button
+                onClick={onSignOut}
+                className="flex items-center gap-1 text-xs text-[#69747D] hover:text-[#252A2E] transition-colors"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Sign out</span>
+              </button>
             </div>
-            <button
-              onClick={onSignOut}
-              className="flex items-center gap-1 text-xs text-[#69747D] hover:text-[#252A2E] transition-colors"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span>Sign out</span>
-            </button>
-          </div>
+          )}
         </div>
       </div>
     </header>
