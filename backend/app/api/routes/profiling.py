@@ -14,15 +14,15 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Query, Depends
 from fastapi.responses import JSONResponse
 
-from app.api.routes.datasets import (
+from ..routes.datasets import (
     DATASET_STORE,
     load_dataset_from_db_if_needed,
 )
-from app.services.db import get_db_connection
-from app.services.profiling.dataset_profiler import profile_dataset_extended
-from app.services.profiling.quality_scorer import compute_quality_score
-from app.services.profiling.missing_value_analyzer import analyze_missing_values
-from app.schemas.profiling import (
+from ...services.db import get_db_connection
+from ...services.profiling.dataset_profiler import profile_dataset_extended
+from ...services.profiling.quality_scorer import compute_quality_score
+from ...services.profiling.missing_value_analyzer import analyze_missing_values
+from ...schemas.profiling import (
     DatasetProfileExtended,
     QualityScoreResponse,
     MissingValueAnalysisResponse,
@@ -46,7 +46,7 @@ def _get_dataframe(dataset_id: str):
 
 def _get_profile(dataset_id: str) -> Optional[Dict[str, Any]]:
     """Resolve the profile dict from memory or SQLite."""
-    from app.api.routes.datasets import PROFILE_STORE
+    from ..routes.datasets import PROFILE_STORE
 
     profile = PROFILE_STORE.get(dataset_id)
     if profile is not None:
@@ -95,7 +95,7 @@ async def get_columns(
     if df is None:
         raise HTTPException(status_code=404, detail="Dataset not found.")
 
-    from app.services.profiling.column_profiler import profile_all_columns
+    from ...services.profiling.column_profiler import profile_all_columns
     columns = profile_all_columns(df)
 
     total = len(columns)
