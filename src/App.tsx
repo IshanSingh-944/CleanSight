@@ -8,6 +8,7 @@ import { LandingPage } from './components/LandingPage';
 import { AuthPage } from './components/AuthPage';
 import { DualAccessScreen } from './components/DualAccessScreen';
 import { AuthenticatedWorkspace } from './components/AuthenticatedWorkspace';
+import { DataIntelligence } from './components/DataIntelligence';
 import { Button } from './components/ui/Button';
 import { API_BASE_URL } from './config';
 import type { DatasetFile, DatasetProfile, Recommendation } from './types';
@@ -26,13 +27,13 @@ export function App() {
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [dismissedReminders, setDismissedReminders] = useState<Set<string>>(new Set());
+  const [workspaceTab, setWorkspaceTab] = useState<'review' | 'intelligence'>('review');
 
   const handleAuthSuccess = useCallback(
     (userData: { user_id: string; email: string; full_name?: string | null }) => {
       setUser(userData);
       setSessionType('auth');
-      // Preserve active guest dataset during guest→account conversion.
-      setView(profile ? 'workspace' : 'landing');
+      setView('landing');
     },
     []
   );
@@ -283,15 +284,43 @@ export function App() {
               </div>
             ) : (
               <>
-                <ReviewWorkspace
-                  profile={profile}
-                  recommendations={recommendations}
-                  datasetId={datasetId}
-                  onUpdateRecommendationStatus={handleUpdateRecommendationStatus}
-                  onGeneratePlan={handleGeneratePlan}
-                  onReset={handleReset}
-                />
-                <AIChatSidebar datasetId={datasetId} profile={profile} />
+                <div className="flex gap-1 border-b border-[#E1E5E3] mb-4">
+                  <button
+                    onClick={() => setWorkspaceTab('review')}
+                    className={`-mb-px border-b-2 px-4 py-2 text-xs font-medium transition-colors ${
+                      workspaceTab === 'review'
+                        ? 'border-[#2868A6] text-[#252A2E]'
+                        : 'border-transparent text-[#69747D] hover:text-[#252A2E]'
+                    }`}
+                  >
+                    Review & Approve
+                  </button>
+                  <button
+                    onClick={() => setWorkspaceTab('intelligence')}
+                    className={`-mb-px border-b-2 px-4 py-2 text-xs font-medium transition-colors ${
+                      workspaceTab === 'intelligence'
+                        ? 'border-[#2868A6] text-[#252A2E]'
+                        : 'border-transparent text-[#69747D] hover:text-[#252A2E]'
+                    }`}
+                  >
+                    Data Intelligence
+                  </button>
+                </div>
+                {workspaceTab === 'review' ? (
+                  <>
+                    <ReviewWorkspace
+                      profile={profile}
+                      recommendations={recommendations}
+                      datasetId={datasetId}
+                      onUpdateRecommendationStatus={handleUpdateRecommendationStatus}
+                      onGeneratePlan={handleGeneratePlan}
+                      onReset={handleReset}
+                    />
+                    <AIChatSidebar datasetId={datasetId} profile={profile} />
+                  </>
+                ) : (
+                  <DataIntelligence datasetId={datasetId} />
+                )}
               </>
             )}
           </main>

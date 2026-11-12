@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from .api.routes import datasets, recommendations, planning, execution, chat, auth
+from .api.routes import profiling
 from .services.middleware import ObservabilityMiddleware
 from .services.db import get_db_connection, init_db
 
@@ -33,6 +34,7 @@ app.include_router(planning.router, prefix="/api")
 app.include_router(execution.router, prefix="/api")
 app.include_router(chat.router, prefix="/api")
 app.include_router(auth.router, prefix="/api")
+app.include_router(profiling.router, prefix="/api")
 
 @app.get("/health")
 async def health_check():
