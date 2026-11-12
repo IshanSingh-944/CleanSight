@@ -11,7 +11,7 @@ from typing import Any, Dict, List
 
 import pandas as pd
 
-from app.services.profiler import Profiler as BaseProfiler
+from ..profiler import Profiler as BaseProfiler
 from .column_profiler import profile_all_columns
 
 
