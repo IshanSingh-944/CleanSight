@@ -12,19 +12,19 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException
 
-from app.api.routes.datasets import (
+from .datasets import (
     DATASET_STORE,
     PROFILE_STORE,
     RECOMMENDATION_STORE,
     load_dataset_from_db_if_needed,
 )
-from app.services.recommendations.evidence_builder import build_evidence_for_recommendation
-from app.services.recommendations.impact_analyzer import estimate_impact
-from app.services.recommendations.recommendation_validator import (
+from ...services.recommendations.evidence_builder import build_evidence_for_recommendation
+from ...services.recommendations.impact_analyzer import estimate_impact
+from ...services.recommendations.recommendation_validator import (
     validate_recommendation,
     validate_recommendations,
 )
-from app.schemas.explainable_recommendations import (
+from ...schemas.explainable_recommendations import (
     ExplainableRecommendation,
     ExplainRecommendationsResponse,
     ImpactPreview,

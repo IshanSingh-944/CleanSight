@@ -12,15 +12,15 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException
 
-from app.api.routes.datasets import (
+from .datasets import (
     DATASET_STORE,
     load_dataset_from_db_if_needed,
 )
-from app.services.intelligence.anomaly_detector import detect_anomalies
-from app.services.intelligence.business_rule_detector import BusinessRule, BusinessRuleDetector
-from app.services.intelligence.conditional_missingness import find_conditional_missingness
-from app.services.intelligence.relationship_analyzer import analyze_all_column_pairs
-from app.schemas.intelligence import (
+from ...services.intelligence.anomaly_detector import detect_anomalies
+from ...services.intelligence.business_rule_detector import BusinessRule, BusinessRuleDetector
+from ...services.intelligence.conditional_missingness import find_conditional_missingness
+from ...services.intelligence.relationship_analyzer import analyze_all_column_pairs
+from ...schemas.intelligence import (
     BusinessRuleDefinition,
     BusinessRuleEvaluationResponse,
     CrossColumnInsightsResponse,

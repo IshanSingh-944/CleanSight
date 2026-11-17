@@ -10,8 +10,8 @@ from typing import Any, Dict, List, Optional
 
 import pandas as pd
 
-from app.services.profiling.column_profiler import profile_column
-from app.services.profiling.type_inference import infer_semantic_type
+from ..profiling.column_profiler import profile_column
+from ..profiling.type_inference import infer_semantic_type
 
 
 def _semantic(series: pd.Series) -> str:
